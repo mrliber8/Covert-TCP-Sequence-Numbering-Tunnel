@@ -1,10 +1,12 @@
 from scapy.all import *
-from random import randint
+import time
+from random import *
+import string
 
 # Hoofdletters hebben een ASCII code van onder de 100, (65-90) en "normale" letters van 97 tot en met
 # 122. Door alleen hoofdletters te gebruiken is elke 2 cijfers 1 letter. Deze consistentie maakt het
 # makkelijker voor de andere groep.
-# Deze tekst geeft 81 pakketjes
+# De tekst van secretlists geeft 78 pakketjes, met 2 voor de 420 & 69 geeft 80 pakketjes
 
 
 def get_uppercase_list():
@@ -29,7 +31,7 @@ def get_decimal_list(secretlist):
 def get_sequencenumber_list(decimallist):
     var = ''
     x = 0
-    c = ['420', '69', '360']  # Begin met 420, 69 & 360 als Sequence number als hint
+    c = ['420', '69']  # Begin met 420, 69 als Sequence number als hint
     for element in decimallist:
         var += str(element)
         x += 1
@@ -42,6 +44,12 @@ def get_sequencenumber_list(decimallist):
     return c
 
 
+def get_random_string():
+    characters = string.ascii_letters + string.digits + string.punctuation
+    randomstring = ''.join(choice(characters) for x in range(182))
+    return randomstring
+
+
 # Verstuur de TCP frames met de nieuwe Sequence numbers
 def packet_with_seq_n(c):
     sportnum = 50000
@@ -49,12 +57,13 @@ def packet_with_seq_n(c):
 
     # MTU van Ethernet is 1500 Bytes, -20 voor IPV4 & -20 voor TCP Header geeft 1460 Bytes aan data
     # 1 Letter is 8 Bytes, dus in de packet kunnen we 1480 / 8 = 182.5 = 182 letters doen die verschijnen in wireshark
-    # als het pakketje door iemand wordt bekeken. Voor nu staat er alleen de tekst: Wat zou er in deze pakketjes zitten?
+    # als het pakketje door iemand wordt bekeken. Dit wordt willekeurig gegenereerd door de functie get_random_string
+    # om als dwaalspoor te gelden voor de andere groep.
     # Time.sleep staat er zodat de pakketjes iets minder opvallen, forceert de andere groep om te filteren
     for x in c:
         a = int(x)
         time.sleep(randint(1, 4))
-        packet = IP(dst="192.168.100.123", src="192.168.100.144")/TCP(sport=sportnum, dport=222, seq=a)/"Wat zou er in deze pakketjes zitten?"
+        packet = IP(dst="192.168.100.123", src="192.168.100.144")/TCP(sport=sportnum, dport=222, seq=a)/get_random_string()
         sportnum += 1
         send(packet)
 
